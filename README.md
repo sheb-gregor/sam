@@ -10,7 +10,7 @@ Add to project using `go get`
 
 ```shell
 
-go get github.com/lancer-kit/sam
+go get github.com/sheb-gregor/sam
 
 ```
 
@@ -24,7 +24,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/lancer-kit/sam"
+	"github.com/sheb-gregor/sam"
 )
 
 const (

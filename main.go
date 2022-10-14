@@ -26,18 +26,14 @@ type StateMachine struct {
 	current State
 	error   error
 	states  map[State]stateObj
-	hooks   HookList
+	hooks   *HookList
 }
 
-func NewStateMachine() StateMachine {
-	return StateMachine{}.New()
-}
-
-func (StateMachine) New() StateMachine {
-	return StateMachine{
+func NewStateMachine() *StateMachine {
+	return &StateMachine{
 		current: "",
 		states:  map[State]stateObj{},
-		hooks:   HookList.New(HookList{}),
+		hooks:   NewHookList(),
 	}
 }
 

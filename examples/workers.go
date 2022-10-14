@@ -1,6 +1,6 @@
 package examples
 
-import "github.com/lancer-kit/sam"
+import "github.com/sheb-gregor/sam"
 
 const (
 	WStateDisabled    sam.State = "Disabled"
@@ -11,12 +11,13 @@ const (
 	WStateFailed      sam.State = "Failed"
 )
 
-// newWorkerSM returns filled state machine of worker lifecycle
+// NewWorkerSM returns filled state machine of worker lifecycle
 //
 // (*) -> [Disabled] -> [Enabled] -> [Initialized] -> [Run] <-> [Stopped]
-//          ↑ ↑____________|  |          |  |  ↑         |
-//          |_________________|__________|  |  |------|  ↓
-//                            |-------------|-----> [Failed]
+//
+//	↑ ↑____________|  |          |  |  ↑         |
+//	|_________________|__________|  |  |------|  ↓
+//	                  |-------------|-----> [Failed]
 func NewWorkerSM() sam.StateMachine {
 	workerSM, err := sam.NewStateMachine().
 		AddTransitions(WStateDisabled, WStateEnabled).

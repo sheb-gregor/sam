@@ -1,29 +1,28 @@
 package sam
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 const nilStep = State("")
 
 func TestNewStateMachine(t *testing.T) {
 	sm := NewStateMachine()
-	assert.Equal(t, nilStep, sm.current)
-	assert.NotNil(t, sm.states)
-	assert.NotNil(t, sm.hooks)
+	EqualStates(t, nilStep, sm.current)
+	NotNil(t, sm.states)
+	NotNil(t, sm.hooks)
 }
 
 func TestStateMachine_State(t *testing.T) {
 	sm := NewStateMachine()
 
-	assert.Equal(t, nilStep, sm.current)
-	assert.NotNil(t, sm.states)
-	assert.NotNil(t, sm.hooks)
+	EqualStates(t, nilStep, sm.current)
+	NotNil(t, sm.states)
+	NotNil(t, sm.hooks)
 
-	sm.current = State("test")
-	assert.Equal(t, sm.current, sm.State())
+	sm.current = "test"
+	EqualStates(t, sm.current, sm.State())
 }
 
 func TestStateMachine_getState(t *testing.T) {
@@ -31,25 +30,25 @@ func TestStateMachine_getState(t *testing.T) {
 	name := State("test")
 
 	state := sm.getState(name)
-	assert.Equal(t, name, state.name)
-	assert.Equal(t, nilStep, state.prev)
-	assert.NotNil(t, state.from)
-	assert.NotNil(t, state.to)
-	assert.False(t, state.exist)
+	EqualStates(t, name, state.name)
+	EqualStates(t, nilStep, state.prev)
+	NotNil(t, state.from)
+	NotNil(t, state.to)
+	False(t, state.exist)
 }
 
 func TestStateMachine_SetState(t *testing.T) {
 	sm := NewStateMachine()
 	name := State("test")
 
-	sm.SetState(name)
-	assert.Equal(t, name, sm.State())
+	_ = sm.SetState(name)
+	EqualStates(t, name, sm.State())
 
 	state := sm.getState(name)
-	assert.Equal(t, name, state.name)
-	assert.NotNil(t, state.from)
-	assert.NotNil(t, state.to)
-	assert.True(t, state.exist)
+	EqualStates(t, name, state.name)
+	NotNil(t, state.from)
+	NotNil(t, state.to)
+	True(t, state.exist)
 }
 
 func TestStateMachine_AddTransition(t *testing.T) {
@@ -60,25 +59,24 @@ func TestStateMachine_AddTransition(t *testing.T) {
 	err := sm.
 		AddTransition(from, from).
 		AddTransition(from, to).Error()
-	assert.Error(t, err)
-	assert.Equal(t, invalidTransition(from, from).Error(), err.Error())
-
+	NotNil(t, err)
+	EqualStr(t, invalidTransition(from, from).Error(), err.Error())
 
 	state := sm.getState(from)
-	assert.Equal(t, from, state.name)
-	assert.False(t, state.exist)
-	assert.NotNil(t, state.from)
-	assert.NotNil(t, state.to)
+	EqualStates(t, from, state.name)
+	False(t, state.exist)
+	NotNil(t, state.from)
+	NotNil(t, state.to)
 	_, ok := state.to[to]
-	assert.False(t, ok)
+	False(t, ok)
 
 	state = sm.getState(to)
-	assert.Equal(t, to, state.name)
-	assert.False(t, state.exist)
-	assert.NotNil(t, state.from)
-	assert.NotNil(t, state.to)
+	EqualStates(t, to, state.name)
+	False(t, state.exist)
+	NotNil(t, state.from)
+	NotNil(t, state.to)
 	_, ok = state.from[from]
-	assert.False(t, ok)
+	False(t, ok)
 }
 
 func TestStateMachine_AddTransitions(t *testing.T) {
@@ -86,25 +84,25 @@ func TestStateMachine_AddTransitions(t *testing.T) {
 	from := State("from")
 	tos := []State{"to_1", "to_2", "to_3"}
 	err := sm.AddTransitions(from, tos...).Error()
-	assert.NoError(t, err)
+	NoError(t, err)
 
 	state := sm.getState(from)
-	assert.Equal(t, from, state.name)
-	assert.True(t, state.exist)
-	assert.NotNil(t, state.from)
-	assert.NotNil(t, state.to)
+	EqualStates(t, from, state.name)
+	True(t, state.exist)
+	NotNil(t, state.from)
+	NotNil(t, state.to)
 
 	for _, to := range tos {
 		_, ok := state.to[to]
-		assert.True(t, ok)
+		True(t, ok)
 
 		stateTo := sm.getState(to)
-		assert.Equal(t, to, stateTo.name)
-		assert.True(t, stateTo.exist)
-		assert.NotNil(t, stateTo.from)
-		assert.NotNil(t, stateTo.to)
+		EqualStates(t, to, stateTo.name)
+		True(t, stateTo.exist)
+		NotNil(t, stateTo.from)
+		NotNil(t, stateTo.to)
 		_, ok = stateTo.from[from]
-		assert.True(t, ok)
+		True(t, ok)
 	}
 
 }
@@ -114,22 +112,22 @@ func TestStateMachine_DoTransition(t *testing.T) {
 	from := State("from")
 	tos := []State{"to_1", "to_2", "to_3"}
 	err := sm.AddTransitions(from, tos...).SetState(from)
-	assert.NoError(t, err)
+	NoError(t, err)
 
-	err = sm.GoTo(State("universe"))
-	assert.Error(t, err)
-	assert.Equal(t, stateNotFound(State("universe")).Error(), err.Error())
-	assert.Equal(t, from, sm.State())
+	err = sm.GoTo("universe")
+	NotNil(t, err)
+	EqualStr(t, stateNotFound("universe").Error(), err.Error())
+	EqualStates(t, from, sm.State())
 
 	err = sm.GoTo(from)
-	assert.NoError(t, err)
-	assert.Equal(t, from, sm.State())
+	NoError(t, err)
+	EqualStates(t, from, sm.State())
 
 	clone := sm.Clone()
 	{
 		err = clone.GoTo(tos[1])
-		assert.NoError(t, err)
-		assert.Equal(t, tos[1], clone.State())
+		NoError(t, err)
+		EqualStates(t, tos[1], clone.State())
 	}
 
 	err = sm.
@@ -137,32 +135,32 @@ func TestStateMachine_DoTransition(t *testing.T) {
 		AddTransitions(tos[1], tos[0], tos[2]).
 		SetState(from)
 
-	assert.NoError(t, err)
+	NoError(t, err)
 
 	{
 		clone = sm.Clone()
 		err = clone.GoTo(tos[0])
-		assert.NoError(t, err)
-		assert.Equal(t, tos[0], clone.State())
+		NoError(t, err)
+		EqualStates(t, tos[0], clone.State())
 
 		err = clone.GoTo(tos[2])
-		assert.NoError(t, err)
-		assert.Equal(t, tos[2], clone.State())
+		NoError(t, err)
+		EqualStates(t, tos[2], clone.State())
 	}
 
 	err = sm.GoTo(tos[1])
-	assert.NoError(t, err)
-	assert.Equal(t, tos[1], sm.State())
+	NoError(t, err)
+	EqualStates(t, tos[1], sm.State())
 
 	clone = sm.Clone()
 	err = clone.GoTo(tos[0])
-	assert.NoError(t, err)
-	assert.Equal(t, tos[0], clone.State())
+	NoError(t, err)
+	EqualStates(t, tos[0], clone.State())
 
 	clone = sm.Clone()
 	err = clone.GoTo(tos[2])
-	assert.NoError(t, err)
-	assert.Equal(t, tos[2], clone.State())
+	NoError(t, err)
+	EqualStates(t, tos[2], clone.State())
 }
 
 func TestStateMachine_GoBack(t *testing.T) {
@@ -174,25 +172,68 @@ func TestStateMachine_GoBack(t *testing.T) {
 		AddTransitions(from, tos[0]).
 		AddTransitions(tos[0], tos[1]).
 		SetState(from)
-	assert.NoError(t, err)
+	NoError(t, err)
 
 	err = sm.GoBack()
-	assert.Error(t, err)
-	assert.Equal(t, invalidTransition(from, State("")).Error(), err.Error())
+	NotNil(t, err)
+	EqualStr(t, invalidTransition(from, "").Error(), err.Error())
 
 	err = sm.GoTo(tos[0])
-	assert.NoError(t, err)
-	assert.Equal(t, tos[0], sm.State())
+	NoError(t, err)
+	EqualStates(t, tos[0], sm.State())
 
 	err = sm.GoTo(tos[1])
-	assert.NoError(t, err)
-	assert.Equal(t, tos[1], sm.State())
+	NoError(t, err)
+	EqualStates(t, tos[1], sm.State())
 
 	err = sm.GoBack()
-	assert.NoError(t, err)
-	assert.Equal(t, tos[0], sm.State())
+	NoError(t, err)
+	EqualStates(t, tos[0], sm.State())
 
 	err = sm.GoBack()
-	assert.NoError(t, err)
-	assert.Equal(t, from, sm.State())
+	NoError(t, err)
+	EqualStates(t, from, sm.State())
+}
+
+func NoError(t *testing.T, err error) {
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+}
+
+func EqualStates(t *testing.T, got, expected State) {
+	if got != expected {
+		t.Errorf("expected(%s) != got(%s)", expected, got)
+		t.FailNow()
+	}
+}
+
+func EqualStr(t *testing.T, got, expected string) {
+	if got != expected {
+		t.Errorf("expected(%s) != got(%s)", expected, got)
+		t.FailNow()
+	}
+}
+
+func NotNil(t *testing.T, v interface{}) {
+	value := reflect.ValueOf(v)
+	if v == nil || value.IsNil() {
+		t.Error("expected to be not nil")
+		t.FailNow()
+	}
+}
+
+func True(t *testing.T, v bool) {
+	if !v {
+		t.Error("expected to be true")
+		t.FailNow()
+	}
+}
+
+func False(t *testing.T, v bool) {
+	if v {
+		t.Error("expected to be false")
+		t.FailNow()
+	}
 }
